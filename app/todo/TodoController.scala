@@ -5,7 +5,7 @@ import javax.inject.Inject
 import play.api.libs.json.Json
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class TodoController @Inject()
 (
@@ -25,6 +25,17 @@ class TodoController @Inject()
         case Some(todo: TodoResource) => Results.Ok(Json.toJson(todo))
         case None => Results.NotFound
       }
+    }
+  }
+
+  def post(): Action[AnyContent] = {
+    todoAction.async {
+      implicit request =>
+        request.body.asJson.map { json => (json \ "title").as[String] } match {
+          case Some(t) => todoResourceHandler.create(t).map(todo => Results.Ok(Json.toJson(todo)))
+          case None => Future.successful(Results.BadRequest)
+        }
+
     }
   }
 }

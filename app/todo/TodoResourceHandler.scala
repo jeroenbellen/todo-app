@@ -23,7 +23,7 @@ object TodoResource {
 @Singleton
 class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) {
 
-  val resources = List(
+  var resources = List(
     TodoResource(UUID.randomUUID().toString, "Task 1"),
     TodoResource(UUID.randomUUID().toString, "Task 2")
   )
@@ -36,5 +36,11 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) {
     Future.successful(
       resources.find(tr => tr.ref == ref)
     )
+  }
+
+  def create(title: String): Future[TodoResource] = {
+    val resource = TodoResource(UUID.randomUUID().toString, title)
+    resources = resource :: resources
+    Future.successful(resource)
   }
 }

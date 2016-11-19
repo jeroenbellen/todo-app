@@ -15,6 +15,8 @@ class TodoRouter @Inject()
   override def routes: Routes = {
     case GET(p"/") => todoController.index
 
+    case POST(p"/") => todoController.post
+
     case GET(p"/$ref") => todoController.get(ref)
 
   }
