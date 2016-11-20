@@ -28,12 +28,13 @@ class TodoController @Inject()
     }
   }
 
-  // TODO Add location header
-  def post(): Action[AnyContent] = {
+  def post: Action[AnyContent] = {
     todoAction.async {
       implicit request =>
         request.body.asJson.map { json => (json \ "title").as[String] } match {
-          case Some(t) => todoResourceHandler.create(t).map(todo => Results.Ok(Json.toJson(todo)))
+          case Some(t) => todoResourceHandler.create(t).map(todo =>
+            Results.Created.withHeaders("Location" -> "http://localhost:9000/todos/%s".format(todo.ref))
+          )
           case None => Future.successful(Results.BadRequest)
         }
 
