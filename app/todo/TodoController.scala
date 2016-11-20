@@ -28,6 +28,7 @@ class TodoController @Inject()
     }
   }
 
+  // TODO Add location header
   def post(): Action[AnyContent] = {
     todoAction.async {
       implicit request =>
@@ -36,6 +37,15 @@ class TodoController @Inject()
           case None => Future.successful(Results.BadRequest)
         }
 
+    }
+  }
+
+  def delete(ref: String): Action[AnyContent] = {
+    todoAction.async {
+      implicit request => todoResourceHandler.delete(ref).map {
+        case Some(todo: TodoResource) => Results.NoContent
+        case None => Results.NotFound
+      }
     }
   }
 }

@@ -19,5 +19,7 @@ class TodoRouter @Inject()
 
     case GET(p"/$ref") => todoController.get(ref)
 
+    case DELETE(p"/$ref") => todoController.delete(ref)
+
   }
 }

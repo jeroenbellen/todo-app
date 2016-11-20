@@ -43,4 +43,14 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) {
     resources = resource :: resources
     Future.successful(resource)
   }
+
+  def delete(ref: String): Future[Option[TodoResource]] = {
+    get(ref).map {
+      case Some(todo) => {
+        resources = resources.filterNot(r => r.ref == todo.ref)
+        Some(todo)
+      }
+      case None => None
+    }
+  }
 }
