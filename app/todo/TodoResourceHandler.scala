@@ -46,10 +46,19 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) {
 
   def delete(ref: String): Future[Option[TodoResource]] = {
     get(ref).map {
-      case Some(todo) => {
+      case Some(todo) =>
         resources = resources.filterNot(r => r.ref == todo.ref)
         Some(todo)
-      }
+      case None => None
+    }
+  }
+
+  def update(ref: String, title: String): Future[Option[TodoResource]] = {
+    delete(ref).map {
+      case Some(todo) =>
+        val resource = TodoResource(ref, title)
+        resources = resource :: resources
+        Some(resource)
       case None => None
     }
   }

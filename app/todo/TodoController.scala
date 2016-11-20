@@ -41,6 +41,19 @@ class TodoController @Inject()
     }
   }
 
+  def update(ref: String): Action[AnyContent] = {
+    todoAction.async {
+      implicit request =>
+        request.body.asJson.map { json => (json \ "title").as[String] } match {
+          case Some(title) => todoResourceHandler.update(ref, title).map {
+            case Some(_) => Results.NoContent
+            case None => Results.NotFound
+          }
+          case None => Future.successful(Results.BadRequest)
+        }
+    }
+  }
+
   def delete(ref: String): Action[AnyContent] = {
     todoAction.async {
       implicit request => todoResourceHandler.delete(ref).map {
