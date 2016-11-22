@@ -7,7 +7,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import play.api.libs.json._
-import todo.repo.TodoReaderActor.FindAll
+import todo.repo.TodoReaderActor.{FindAll, GetOne}
 import todo.repo.{ConfigCassandraCluster, TodoReaderActor}
 
 import scala.concurrent.duration._
@@ -38,17 +38,15 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
     (read ? FindAll).mapTo[Iterable[TodoResource]]
   }
 
+  def get(ref: String): Future[Option[TodoResource]] = {
+    (read ? GetOne(ref)).mapTo[Option[TodoResource]]
+  }
+
+
   var resources = List(
     TodoResource(UUID.randomUUID().toString, "Task 1"),
     TodoResource(UUID.randomUUID().toString, "Task 2")
   )
-
-
-  def get(ref: String): Future[Option[TodoResource]] = {
-    Future.successful(
-      resources.find(tr => tr.ref == ref)
-    )
-  }
 
   def create(title: String): Future[TodoResource] = {
     val resource = TodoResource(UUID.randomUUID().toString, title)
