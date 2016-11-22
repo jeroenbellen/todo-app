@@ -14,3 +14,4 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies += "net.codingwell" %% "scala-guice" % "4.1.0"
+libraryDependencies += "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.2"

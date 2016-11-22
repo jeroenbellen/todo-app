@@ -3,9 +3,16 @@ package todo
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
+import akka.actor._
+import akka.pattern.ask
+import akka.util.Timeout
 import play.api.libs.json._
+import todo.repo.TodoReaderActor.FindAll
+import todo.repo.{ConfigCassandraCluster, TodoReaderActor}
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import scala.language.postfixOps
 
 case class TodoResource(ref: String, title: String)
 
@@ -21,16 +28,21 @@ object TodoResource {
 }
 
 @Singleton
-class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) {
+class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends ConfigCassandraCluster {
+
+  implicit val timeout: Timeout = Timeout(5 seconds)
+  implicit lazy val system = ActorSystem()
+  val read = system.actorOf(Props(new TodoReaderActor(cluster)))
+
+  def find(): Future[Iterable[TodoResource]] = {
+    (read ? FindAll).mapTo[Iterable[TodoResource]]
+  }
 
   var resources = List(
     TodoResource(UUID.randomUUID().toString, "Task 1"),
     TodoResource(UUID.randomUUID().toString, "Task 2")
   )
 
-  def find(): Future[Iterable[TodoResource]] = {
-    Future.successful(resources)
-  }
 
   def get(ref: String): Future[Option[TodoResource]] = {
     Future.successful(
