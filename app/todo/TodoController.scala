@@ -45,9 +45,9 @@ class TodoController @Inject()
     todoAction.async {
       implicit request =>
         request.body.asJson.map { json => (json \ "title").as[String] } match {
-          case Some(title) => todoResourceHandler.update(ref, title).map {
-            case Some(_) => Results.NoContent
-            case None => Results.NotFound
+          case Some(title) => todoResourceHandler.get(ref).flatMap {
+            case Some(_) => todoResourceHandler.update(ref, title).map(_ => Results.NoContent)
+            case None => Future.successful(Results.NotFound)
           }
           case None => Future.successful(Results.BadRequest)
         }

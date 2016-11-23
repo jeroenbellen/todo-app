@@ -1,5 +1,7 @@
 package todo.repo
 
+import java.util.UUID
+
 import akka.actor.Actor
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder.{eq => equ}
@@ -43,7 +45,7 @@ class TodoReaderActor(cluster: Cluster) extends Actor {
       val query = QueryBuilder.select().all().from("todo", "todo").limit(10)
       session.executeAsync(query) map (_.all().map(buildTodo).toVector) pipeTo sender
     case GetOne(ref) =>
-      val query = QueryBuilder.select().all().from("todo", "todo").where(equ("ref", ref))
+      val query = QueryBuilder.select().all().from("todo", "todo").where(equ("ref", UUID.fromString(ref)))
       session.executeAsync(query) map (_.one()) map (row => optBuildTodo(row)) pipeTo sender
   }
 }

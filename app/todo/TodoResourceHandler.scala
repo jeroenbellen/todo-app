@@ -8,7 +8,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import play.api.libs.json._
 import todo.repo.TodoReaderActor.{FindAll, GetOne}
-import todo.repo.TodoWriterActor.Create
+import todo.repo.TodoWriterActor.{Create, Update}
 import todo.repo.{ConfigCassandraCluster, TodoReaderActor, TodoWriterActor}
 
 import scala.concurrent.duration._
@@ -48,6 +48,10 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
     (write ? Create(title)).mapTo[TodoResource]
   }
 
+  def update(ref: String, title: String): Future[TodoResource] = {
+    (write ? Update(ref, title)).mapTo[TodoResource]
+  }
+
   var resources = List(
     TodoResource(UUID.randomUUID().toString, "Task 1"),
     TodoResource(UUID.randomUUID().toString, "Task 2")
@@ -58,16 +62,6 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
       case Some(todo) =>
         resources = resources.filterNot(r => r.ref == todo.ref)
         Some(todo)
-      case None => None
-    }
-  }
-
-  def update(ref: String, title: String): Future[Option[TodoResource]] = {
-    delete(ref).map {
-      case Some(todo) =>
-        val resource = TodoResource(ref, title)
-        resources = resource :: resources
-        Some(resource)
       case None => None
     }
   }
