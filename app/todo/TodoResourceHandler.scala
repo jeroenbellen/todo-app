@@ -8,7 +8,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 import play.api.libs.json._
 import todo.repo.TodoReaderActor.{FindAll, GetOne}
-import todo.repo.{ConfigCassandraCluster, TodoReaderActor}
+import todo.repo.TodoWriterActor.Create
+import todo.repo.{ConfigCassandraCluster, TodoReaderActor, TodoWriterActor}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,6 +34,7 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
   implicit val timeout: Timeout = Timeout(5 seconds)
   implicit lazy val system = ActorSystem()
   val read = system.actorOf(Props(new TodoReaderActor(cluster)))
+  val write = system.actorOf(Props(new TodoWriterActor(cluster)))
 
   def find(): Future[Iterable[TodoResource]] = {
     (read ? FindAll).mapTo[Iterable[TodoResource]]
@@ -42,17 +44,14 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
     (read ? GetOne(ref)).mapTo[Option[TodoResource]]
   }
 
+  def create(title: String): Future[TodoResource] = {
+    (write ? Create(title)).mapTo[TodoResource]
+  }
 
   var resources = List(
     TodoResource(UUID.randomUUID().toString, "Task 1"),
     TodoResource(UUID.randomUUID().toString, "Task 2")
   )
-
-  def create(title: String): Future[TodoResource] = {
-    val resource = TodoResource(UUID.randomUUID().toString, title)
-    resources = resource :: resources
-    Future.successful(resource)
-  }
 
   def delete(ref: String): Future[Option[TodoResource]] = {
     get(ref).map {

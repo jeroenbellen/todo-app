@@ -22,13 +22,12 @@ object TodoReaderActor {
 class TodoReaderActor(cluster: Cluster) extends Actor {
   val session = cluster.connect("todo")
 
-
   import akka.pattern.pipe
   import context.dispatcher
 
   def buildTodo(r: Row): TodoResource = {
     TodoResource(
-      r.getString("ref"),
+      r.getUUID("ref").toString,
       r.getString("title")
     )
   }
