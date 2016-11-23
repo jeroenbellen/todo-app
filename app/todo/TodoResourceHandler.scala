@@ -1,6 +1,5 @@
 package todo
 
-import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import akka.actor._
@@ -8,7 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import play.api.libs.json._
 import todo.repo.TodoReaderActor.{FindAll, GetOne}
-import todo.repo.TodoWriterActor.{Create, Update}
+import todo.repo.TodoWriterActor.{Create, Delete, Update}
 import todo.repo.{ConfigCassandraCluster, TodoReaderActor, TodoWriterActor}
 
 import scala.concurrent.duration._
@@ -52,17 +51,7 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
     (write ? Update(ref, title)).mapTo[TodoResource]
   }
 
-  var resources = List(
-    TodoResource(UUID.randomUUID().toString, "Task 1"),
-    TodoResource(UUID.randomUUID().toString, "Task 2")
-  )
-
-  def delete(ref: String): Future[Option[TodoResource]] = {
-    get(ref).map {
-      case Some(todo) =>
-        resources = resources.filterNot(r => r.ref == todo.ref)
-        Some(todo)
-      case None => None
-    }
+  def delete(ref: String): Future[Boolean] = {
+    (write ? Delete(ref)).mapTo[Boolean]
   }
 }

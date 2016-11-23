@@ -56,10 +56,11 @@ class TodoController @Inject()
 
   def delete(ref: String): Action[AnyContent] = {
     todoAction.async {
-      implicit request => todoResourceHandler.delete(ref).map {
-        case Some(todo: TodoResource) => Results.NoContent
-        case None => Results.NotFound
-      }
+      implicit request =>
+        todoResourceHandler.get(ref).flatMap {
+          case Some(_) => todoResourceHandler.delete(ref).map(_ => Results.NoContent)
+          case None => Future.successful(Results.NotFound)
+        }
     }
   }
 }
