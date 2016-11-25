@@ -35,11 +35,11 @@ object CassandraLocator {
   }
 }
 
-trait CassadraCluster {
+trait CassandraCluster {
   def cluster: Cluster
 }
 
-trait ConfigCassandraCluster extends CassadraCluster {
+trait ConfigCassandraCluster extends CassandraCluster {
 
   val locator: (String, Int) = CassandraLocator.getContactPointWithPort
 
