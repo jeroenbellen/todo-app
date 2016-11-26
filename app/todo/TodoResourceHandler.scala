@@ -35,23 +35,19 @@ class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends Confi
   val read = system.actorOf(Props(new TodoReaderActor(cluster)))
   val write = system.actorOf(Props(new TodoWriterActor(cluster)))
 
-  def find(): Future[Iterable[TodoResource]] = {
+  def find(): Future[Iterable[TodoResource]] =
     (read ? FindAll).mapTo[Iterable[TodoResource]]
-  }
 
-  def get(ref: String): Future[Option[TodoResource]] = {
+
+  def get(ref: String): Future[Option[TodoResource]] =
     (read ? GetOne(ref)).mapTo[Option[TodoResource]]
-  }
 
-  def create(title: String): Future[TodoResource] = {
+  def create(title: String): Future[TodoResource] =
     (write ? Create(title)).mapTo[TodoResource]
-  }
 
-  def update(ref: String, title: String): Future[TodoResource] = {
+  def update(ref: String, title: String): Future[TodoResource] =
     (write ? Update(ref, title)).mapTo[TodoResource]
-  }
 
-  def delete(ref: String): Future[Boolean] = {
+  def delete(ref: String): Future[Boolean] =
     (write ? Delete(ref)).mapTo[Boolean]
-  }
 }
