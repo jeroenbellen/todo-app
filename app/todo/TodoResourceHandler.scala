@@ -8,7 +8,7 @@ import akka.util.Timeout
 import play.api.libs.json._
 import todo.repo.TodoReaderActor.{FindAll, GetOne}
 import todo.repo.TodoWriterActor.{Create, Delete, Update}
-import todo.repo.{CassandraSession, TodoReaderActor, TodoWriterActor}
+import todo.repo.{ TodoReaderActor, TodoWriterActor}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,16 +28,16 @@ object TodoResource {
 }
 
 @Singleton
-class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) extends CassandraSession {
+class TodoResourceHandler @Inject()(implicit ec: ExecutionContext) {
 
-  implicit val timeout: Timeout = Timeout(5 seconds)
+  implicit val timeout: Timeout = Timeout(30 seconds)
   implicit lazy val system = ActorSystem()
-  val read = system.actorOf(Props(TodoReaderActor(session("todo"))))
-  val write = system.actorOf(Props(TodoWriterActor(session("todo"))))
+
+  val read = system.actorOf(Props(classOf[TodoReaderActor]), "TodoReader")
+  val write = system.actorOf(Props(classOf[TodoWriterActor]), "TodoWriter")
 
   def find(): Future[Iterable[TodoResource]] =
     (read ? FindAll).mapTo[Iterable[TodoResource]]
-
 
   def get(ref: String): Future[Option[TodoResource]] =
     (read ? GetOne(ref)).mapTo[Option[TodoResource]]
