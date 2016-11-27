@@ -9,18 +9,19 @@ import play.api.Logger
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Properties
 
 
 object CassandraLocator {
 
   import com.typesafe.conductr.lib.scala.ConnectionContext.Implicits.global
 
-  def hostAndPort: (String, Int) = {
-    Logger.info("Locate cassandra .. ")
+  private def lookup(locatorUrl: String) = {
+    Logger.info("Lookup cassandra using service locator -> " + locatorUrl)
     val uri: Option[URI] = Await.result(
       LocationService.lookup(
         "/native",
-        uriHelper("http://127.0.0.1:9000"),
+        uriHelper(locatorUrl),
         LocationCache()),
       Timeout(1 seconds).duration)
 
@@ -33,6 +34,16 @@ object CassandraLocator {
 
     (uri.get.getHost, uri.get.getPort)
   }
+
+  private def fallBackLocalHost = {
+    Logger.warn("No service locator defined, fallback to localhost")
+    ("localhost", 9042)
+  }
+
+  def hostAndPort(locatorUrl: Option[String] = Properties.envOrNone("SERVICE_LOCATOR")): (String, Int) = locatorUrl match {
+    case Some(url) => lookup(url)
+    case None => fallBackLocalHost
+  }
 }
 
 trait CassandraSession {
@@ -43,7 +54,7 @@ trait CassandraSession {
       .withPort(host _2)
       .build()
 
-  def session(keyspace: String): Session = cluster(CassandraLocator.hostAndPort).connect(keyspace)
+  def session(keyspace: String): Session = cluster(CassandraLocator.hostAndPort()).connect(keyspace)
 
-  def session() = cluster(CassandraLocator.hostAndPort).connect()
+  def session() = cluster(CassandraLocator.hostAndPort()).connect()
 }
