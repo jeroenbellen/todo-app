@@ -3,7 +3,7 @@ package todo.repo
 import java.net.URI
 
 import akka.util.Timeout
-import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.{Cluster, Session}
 import com.typesafe.conductr.bundlelib.scala.{LocationCache, LocationService, URI => uriHelper}
 import play.api.Logger
 
@@ -15,7 +15,7 @@ object CassandraLocator {
 
   import com.typesafe.conductr.lib.scala.ConnectionContext.Implicits.global
 
-  def getContactPointWithPort: (String, Int) = {
+  def hostAndPort: (String, Int) = {
     Logger.info("Locate cassandra .. ")
     val uri: Option[URI] = Await.result(
       LocationService.lookup(
@@ -35,17 +35,15 @@ object CassandraLocator {
   }
 }
 
-trait CassandraCluster {
-  def cluster: Cluster
-}
+trait CassandraSession {
 
-trait ConfigCassandraCluster extends CassandraCluster {
-
-  val locator: (String, Int) = CassandraLocator.getContactPointWithPort
-
-  lazy val cluster: Cluster =
+  private def cluster(host: (String, Int)): Cluster =
     Cluster.builder()
-      .addContactPoint(locator._1)
-      .withPort(locator._2)
+      .addContactPoint(host _1)
+      .withPort(host _2)
       .build()
+
+  def session(keyspace: String): Session = cluster(CassandraLocator.hostAndPort).connect(keyspace)
+
+  def session() = cluster(CassandraLocator.hostAndPort).connect()
 }

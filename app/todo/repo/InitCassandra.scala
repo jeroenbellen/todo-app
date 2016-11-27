@@ -4,9 +4,7 @@ import play.api.Logger
 
 trait InitCassandra {}
 
-class InitCassandraImpl extends InitCassandra with ConfigCassandraCluster {
-
-  lazy val session = cluster.connect()
+class InitCassandraImpl extends InitCassandra with CassandraSession {
 
   {
     Logger.info("Setting up cassandra .. ")
@@ -17,6 +15,6 @@ class InitCassandraImpl extends InitCassandra with ConfigCassandraCluster {
 
   def executeQuery(query: String): Any = {
     Logger.info("Executing -> " + query)
-    session.execute(query)
+    session().execute(query)
   }
 }

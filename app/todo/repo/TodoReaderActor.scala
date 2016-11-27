@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.Actor
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder.{eq => equ}
-import com.datastax.driver.core.{Cluster, Row}
+import com.datastax.driver.core.{Row, Session}
 import todo.TodoResource
 import todo.repo.TodoReaderActor.{FindAll, GetOne}
 import todo.repo.core.cassandra.resultset._
@@ -19,10 +19,11 @@ object TodoReaderActor {
 
   case class GetOne(ref: String)
 
+  def apply(session: Session): TodoReaderActor = new TodoReaderActor(session)
+
 }
 
-class TodoReaderActor(cluster: Cluster) extends Actor {
-  val session = cluster.connect("todo")
+class TodoReaderActor private(session: Session) extends Actor {
 
   import akka.pattern.pipe
   import context.dispatcher

@@ -3,7 +3,7 @@ package todo.repo
 import java.util.UUID
 
 import akka.actor.Actor
-import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.Session
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder.{eq => equ}
 import com.datastax.driver.core.utils.UUIDs
@@ -19,10 +19,10 @@ object TodoWriterActor {
 
   case class Delete(ref: String)
 
+  def apply(session: Session): TodoWriterActor = new TodoWriterActor(session)
 }
 
-class TodoWriterActor(cluster: Cluster) extends Actor {
-  val session = cluster.connect("todo");
+class TodoWriterActor private(session: Session) extends Actor {
 
   import akka.pattern.pipe
   import context.dispatcher
